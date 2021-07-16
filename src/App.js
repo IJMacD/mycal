@@ -9,11 +9,16 @@ const DAY_NAMES = {
   planets: ["Moon","Mars","Mercury","Jupiter","Venus","Saturn","Sun"],
   latin: ["diēs Lūnae","diēs Mārtis","diēs Mercuriī","diēs Iovis","diēs Veneris","diēs Sāturnī","diēs Sōlis"],
   japanese: ["月","火","水","木","金","土","日"],
+  astronomical: ["☽︎","♂","☿","♃","♀","♄","☉"],
+  babylonian: ["Sin","Nergal","Nabu","Marduk","Ishtar","Shabattu","Shamash"],
+  greek: ["ἡμέρᾱ Σελήνης","ἡμέρᾱ Ἄρεως","ἡμέρᾱ Ἑρμοῦ","ἡμέρᾱ Διός","ἡμέρᾱ Ἀφροδῑ́της","ἡμέρᾱ Κρόνου","ἡμέρᾱ Ἡλίου"],
+  hebrew: ["שני","שלישי","רביעי","חמישי","שישי","שבת","ראשון"],
 }
 
 function App() {
   const [ holoceneYear, setHoloceneYear ] = useSavedState("mycal.holocene", true);
   const [ dayNameOrigin, setDayNameOrigin] = useSavedState("mycal.dayname", /** @type {Object.keys(DAY_NAMES)} */"english");
+  const [ julianAtNoon, setJulianAtNoon ] = useSavedState("mycal.julianAtNoon", false);
 
   const d = startOfWeek(startOfMonth());
   const weeks = makeWeeks(d, 100);
@@ -51,13 +56,27 @@ function App() {
             <option value="french">French</option>
             <option value="latin">Latin</option>
             <option value="japanese">Japanese</option>
+            <option value="astronomical">Astronomical</option>
+            <option value="babylonian">Babylonian</option>
+            <option value="greek">Greek</option>
+            <option value="hebrew">Hebrew</option>
+          </select>
+        </label>
+        <label>
+          <span>Julian</span>{' '}
+          <select
+            value={julianAtNoon ? "1" : "0"}
+            onChange={e => setJulianAtNoon(e.target.value === "1")}
+            style={{fontSize: "1em"}}
+          >
+            <option value="0">At Midnight</option>
+            <option value="1">From Noon</option>
           </select>
         </label>
       </div>
       <table>
         <thead>
           <tr>
-            <th></th>
             <th></th>
             {
               dayNames.map((n,i) => <th key={i} style={dayHeaderStyle}>{n}</th>)
@@ -74,10 +93,12 @@ function App() {
 
               return (
                 <tr key={+w[0]}>
-                  <th>{(n === 1 || i === 0) && ((holoceneYear ? 1e4 : 0) + w[6].getFullYear())}</th>
-                  <th>W{n}</th>
+                  <th style={{textAlign:"right"}}>
+                    {(n === 1 || i === 0) && ((holoceneYear ? 1e4 : 0) + w[6].getFullYear() + "-")}
+                    W{n}
+                  </th>
                   {
-                    w.map(d => <td key={+d}><DayView date={d} /></td>)
+                    w.map(d => <td key={+d}><DayView date={d} julianAtNoon={julianAtNoon} /></td>)
                   }
                   <th>{isStartOfMonth && (w[6].getMonth() + 1)}</th>
                 </tr>
@@ -92,7 +113,7 @@ function App() {
 
 export default App;
 
-function DayView ({ date }) {
+function DayView ({ date, julianAtNoon = false }) {
   const isToday = +date === +startOfDay();
 
   /** @type {import('react').CSSProperties} */
@@ -129,7 +150,7 @@ function DayView ({ date }) {
           <MoonIndicator date={date} />
         }
       </div>
-      <span style={julianStyle}>{julian(date)}</span>
+      <span style={julianStyle}>{julian(date) + (julianAtNoon ? 1 : 0)}</span>
     </div>
   );
 }
