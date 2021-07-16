@@ -19,6 +19,7 @@ function App() {
   const [ holoceneYear, setHoloceneYear ] = useSavedState("mycal.holocene", true);
   const [ dayNameOrigin, setDayNameOrigin] = useSavedState("mycal.dayname", /** @type {Object.keys(DAY_NAMES)} */"english");
   const [ julianAtNoon, setJulianAtNoon ] = useSavedState("mycal.julianAtNoon", false);
+  const [ monthBands, setMonthBands ] = useSavedState("mycal.monthBands", false);
 
   const d = startOfWeek(startOfMonth());
   const weeks = makeWeeks(d, 100);
@@ -28,6 +29,18 @@ function App() {
   };
 
   const dayNames = DAY_NAMES[dayNameOrigin] || [];
+
+  /**
+   *
+   * @param {Date} date
+   */
+  function getDayClassName (date) {
+    const d = new Date();
+    const currentMonth = d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth();
+    const monthEven = date.getMonth() % 2;
+
+    return `Day ${currentMonth ? "Day-CurrentMonth" : ""} ${monthEven ? "Day-MonthEven" : "Day-MonthOdd"}`;
+  }
 
   return (
     <div className="App">
@@ -73,8 +86,12 @@ function App() {
             <option value="1">From Noon</option>
           </select>
         </label>
+        <label>
+          <span>Month Bands</span>{' '}
+          <input type="checkbox" checked={monthBands} onChange={e => setMonthBands(e.target.checked)} />
+        </label>
       </div>
-      <table>
+      <table className={monthBands?"MonthBands":""}>
         <thead>
           <tr>
             <th></th>
@@ -88,19 +105,20 @@ function App() {
           {
             weeks.map((w, i) => {
               const isStartOfMonth = w.some(d => d.getDate() === 1);
+              const currentWeek = Date.now() >= +w[0] && Date.now() < (+w[0] + 7 * 86400000);
 
               const n = weekNumber(w[0]);
 
               return (
-                <tr key={+w[0]}>
+                <tr key={+w[0]} className={currentWeek?"Week Week-Current":"Week"}>
                   <th style={{textAlign:"right"}}>
                     {(n === 1 || i === 0) && ((holoceneYear ? 1e4 : 0) + w[6].getFullYear() + "-")}
                     W{n}
                   </th>
                   {
-                    w.map(d => <td key={+d}><DayView date={d} julianAtNoon={julianAtNoon} /></td>)
+                    w.map(d => <td key={+d} className={getDayClassName(d)}><DayView date={d} julianAtNoon={julianAtNoon} /></td>)
                   }
-                  <th>{isStartOfMonth && (w[6].getMonth() + 1)}</th>
+                  <th className={getDayClassName(w[6])}>{isStartOfMonth && (w[6].getMonth() + 1)}</th>
                 </tr>
               );
             })

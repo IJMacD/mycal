@@ -6,7 +6,7 @@
 
 .App {
   text-align: center;
-  padding-top: 50px;
+  padding-top: 1.5rem;
 }
 
 .App-Options {
@@ -17,6 +17,7 @@
   z-index: 1;
   padding: 0.3em;
   width: 100%;
+  height: 1.5rem;
 }
 
 .App-Options label {
@@ -25,6 +26,32 @@
 
 table {
   margin: 0 auto;
+  border-collapse: collapse;
+}
+
+thead {
+  position: sticky;
+  top: 1.5rem;
+  background-color: white;
+  z-index: 1;
+}
+
+.Week-Current th,
+.Week-Current td
+{
+  background-color: #EEEEFF !important;
+}
+
+.MonthBands .Day-MonthOdd {
+  background-color: #F5F5F5;
+}
+
+.MonthBands .Day-MonthEven {
+  background-color: #E9E9E9;
+}
+
+.MonthBands .Day-CurrentMonth {
+  background-color: #FFF5F5;
 }
 
 @media print {
