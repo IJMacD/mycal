@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/mycal/static/css/main.5193eace.chunk.css",
+    "main.js": "/mycal/static/js/main.47052316.chunk.js",
+    "main.js.map": "/mycal/static/js/main.47052316.chunk.js.map",
+    "runtime-main.js": "/mycal/static/js/runtime-main.bb5e5960.js",
+    "runtime-main.js.map": "/mycal/static/js/runtime-main.bb5e5960.js.map",
+    "static/js/2.07a46956.chunk.js": "/mycal/static/js/2.07a46956.chunk.js",
+    "static/js/2.07a46956.chunk.js.map": "/mycal/static/js/2.07a46956.chunk.js.map",
+    "static/js/3.d52731e0.chunk.js": "/mycal/static/js/3.d52731e0.chunk.js",
+    "static/js/3.d52731e0.chunk.js.map": "/mycal/static/js/3.d52731e0.chunk.js.map",
+    "index.html": "/mycal/index.html",
+    "static/css/main.5193eace.chunk.css.map": "/mycal/static/css/main.5193eace.chunk.css.map",
+    "static/js/2.07a46956.chunk.js.LICENSE.txt": "/mycal/static/js/2.07a46956.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.bb5e5960.js",
+    "static/js/2.07a46956.chunk.js",
+    "static/css/main.5193eace.chunk.css",
+    "static/js/main.47052316.chunk.js"
+  ]
+}
