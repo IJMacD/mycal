@@ -6,8 +6,29 @@
 
 .App {
   text-align: center;
+  padding-top: 50px;
+}
+
+.App-Options {
+  font-size: 0.5em;
+  position: fixed;
+  top: 0;
+  background-color: white;
+  z-index: 1;
+  padding: 0.3em;
+  width: 100%;
+}
+
+.App-Options label {
+  margin: 0.125em;
 }
 
 table {
   margin: 0 auto;
+}
+
+@media print {
+  .App-Options {
+    display: none;
+  }
 }

@@ -1,25 +1,67 @@
 import './App.css';
 import { phase, phase_string } from './moon';
+import { useSavedState } from './useSavedState';
+
+const DAY_NAMES = {
+  english: ["Monday","Tuesday","Wedensday","Thursday","Friday","Sauturday","Sunday"],
+  norse: ["Moon day","Tiw's day","Woden's day","Thor's day","Freya's day","Sauturn's day","Sun day"],
+  french: ["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"],
+  planets: ["Moon","Mars","Mercury","Jupiter","Venus","Saturn","Sun"],
+  latin: ["diēs Lūnae","diēs Mārtis","diēs Mercuriī","diēs Iovis","diēs Veneris","diēs Sāturnī","diēs Sōlis"],
+  japanese: ["月","火","水","木","金","土","日"],
+}
 
 function App() {
+  const [ holoceneYear, setHoloceneYear ] = useSavedState("mycal.holocene", true);
+  const [ dayNameOrigin, setDayNameOrigin] = useSavedState("mycal.dayname", /** @type {Object.keys(DAY_NAMES)} */"english");
 
   const d = startOfWeek(startOfMonth());
   const weeks = makeWeeks(d, 100);
 
+  const dayHeaderStyle = {
+    fontSize: "0.5em",
+  };
+
+  const dayNames = DAY_NAMES[dayNameOrigin] || [];
+
   return (
     <div className="App">
+      <div className="App-Options">
+        <label>
+          <span>Year</span>{' '}
+          <select
+            value={holoceneYear ? "1" : "0"}
+            onChange={e => setHoloceneYear(e.target.value === "1")}
+            style={{fontSize: "1em"}}
+          >
+            <option value="0">Gregorian</option>
+            <option value="1">Holocene Era</option>
+          </select>
+        </label>
+        <label>
+          <span>Day Names</span>{' '}
+          <select
+            value={dayNameOrigin}
+            onChange={e => setDayNameOrigin(e.target.value)}
+            style={{fontSize: "1em"}}
+          >
+            <option value="english">English</option>
+            <option value="norse">Norse</option>
+            <option value="planets">Planets</option>
+            <option value="french">French</option>
+            <option value="latin">Latin</option>
+            <option value="japanese">Japanese</option>
+          </select>
+        </label>
+      </div>
       <table>
         <thead>
           <tr>
             <th></th>
-            <th>M</th>
-            <th>T</th>
-            <th>W</th>
-            <th>T</th>
-            <th>F</th>
-            <th>S</th>
-            <th>S</th>
             <th></th>
+            {
+              dayNames.map((n,i) => <th key={i} style={dayHeaderStyle}>{n}</th>)
+            }
             <th></th>
           </tr>
         </thead>
@@ -27,16 +69,17 @@ function App() {
           {
             weeks.map((w, i) => {
               const isStartOfMonth = w.some(d => d.getDate() === 1);
-              const isStartOfYear = w.some(d => d.getMonth() === 0 && d.getDate() === 1);
+
+              const n = weekNumber(w[0]);
 
               return (
                 <tr key={+w[0]}>
-                  <th>{weekNumber(w[0])}</th>
+                  <th>{(n === 1 || i === 0) && ((holoceneYear ? 1e4 : 0) + w[6].getFullYear())}</th>
+                  <th>W{n}</th>
                   {
                     w.map(d => <td key={+d}><DayView date={d} /></td>)
                   }
                   <th>{isStartOfMonth && (w[6].getMonth() + 1)}</th>
-                  <th>{(isStartOfYear || i === 0) && (1e4 + w[6].getFullYear())}</th>
                 </tr>
               );
             })
