@@ -13,12 +13,19 @@ const DAY_NAMES = {
   babylonian: ["Sin","Nergal","Nabu","Marduk","Ishtar","Shabattu","Shamash"],
   greek: ["ἡμέρᾱ Σελήνης","ἡμέρᾱ Ἄρεως","ἡμέρᾱ Ἑρμοῦ","ἡμέρᾱ Διός","ἡμέρᾱ Ἀφροδῑ́της","ἡμέρᾱ Κρόνου","ἡμέρᾱ Ἡλίου"],
   hebrew: ["שני","שלישי","רביעי","חמישי","שישי","שבת","ראשון"],
-}
+};
+
+const JULIAN_PREF = {
+  NONE: 0,
+  AT_MIDNIGHT: 1,
+  FROM_NOON: 2,
+};
 
 function App() {
-  const [ holoceneYear, setHoloceneYear ] = useSavedState("mycal.holocene", true);
+  const [ yearPreference, setYearPreference ] = useSavedState("mycal.yearPref", "gregorian");
   const [ dayNameOrigin, setDayNameOrigin] = useSavedState("mycal.dayname", /** @type {Object.keys(DAY_NAMES)} */"english");
-  const [ julianAtNoon, setJulianAtNoon ] = useSavedState("mycal.julianAtNoon", false);
+  const [ julianPreference, setJulianPreference ] = useSavedState("mycal.julianPreference", JULIAN_PREF.AT_MIDNIGHT);
+  const [ yearDayPreference, setYearDayPreference ] = useSavedState("mycal.yearDayPreference", 0);
   const [ monthBands, setMonthBands ] = useSavedState("mycal.monthBands", false);
 
   const d = startOfWeek(startOfMonth());
@@ -42,18 +49,20 @@ function App() {
     return `Day ${currentMonth ? "Day-CurrentMonth" : ""} ${monthEven ? "Day-MonthEven" : "Day-MonthOdd"}`;
   }
 
+  const yearAdjust = yearPreference === "holocene" ? 1e4 : 0;
+  const dayPreferences = { yearDay: yearDayPreference, julian: julianPreference };
+
   return (
     <div className="App">
       <div className="App-Options">
         <label>
           <span>Year</span>{' '}
           <select
-            value={holoceneYear ? "1" : "0"}
-            onChange={e => setHoloceneYear(e.target.value === "1")}
-            style={{fontSize: "1em"}}
+            value={yearPreference}
+            onChange={e => setYearPreference(e.target.value)}
           >
-            <option value="0">Gregorian</option>
-            <option value="1">Holocene Era</option>
+            <option value="gregorian">Gregorian</option>
+            <option value="holocene">Holocene Era</option>
           </select>
         </label>
         <label>
@@ -61,7 +70,6 @@ function App() {
           <select
             value={dayNameOrigin}
             onChange={e => setDayNameOrigin(e.target.value)}
-            style={{fontSize: "1em"}}
           >
             <option value="english">English</option>
             <option value="norse">Norse</option>
@@ -76,14 +84,18 @@ function App() {
           </select>
         </label>
         <label>
+          <span>Year Day</span>{' '}
+          <input type="checkbox" checked={yearDayPreference === 1} onChange={e => setYearDayPreference(e.target.checked ? 1 : 0)} />
+        </label>
+        <label>
           <span>Julian</span>{' '}
           <select
-            value={julianAtNoon ? "1" : "0"}
-            onChange={e => setJulianAtNoon(e.target.value === "1")}
-            style={{fontSize: "1em"}}
+            value={julianPreference}
+            onChange={e => setJulianPreference(+e.target.value)}
           >
-            <option value="0">At Midnight</option>
-            <option value="1">From Noon</option>
+            <option value={JULIAN_PREF.NONE}>None</option>
+            <option value={JULIAN_PREF.AT_MIDNIGHT}>At Midnight</option>
+            <option value={JULIAN_PREF.FROM_NOON}>From Noon</option>
           </select>
         </label>
         <label>
@@ -112,11 +124,15 @@ function App() {
               return (
                 <tr key={+w[0]} className={currentWeek?"Week Week-Current":"Week"}>
                   <th style={{textAlign:"right"}}>
-                    {(n === 1 || i === 0) && ((holoceneYear ? 1e4 : 0) + w[6].getFullYear() + "-")}
+                    {(n === 1 || i === 0) && (yearAdjust + w[6].getFullYear() + "-")}
                     W{n}
                   </th>
                   {
-                    w.map(d => <td key={+d} className={getDayClassName(d)}><DayView date={d} julianAtNoon={julianAtNoon} /></td>)
+                    w.map(d => (
+                      <td key={+d} className={getDayClassName(d)}>
+                        <DayView date={d} preferences={dayPreferences} />
+                      </td>
+                    ))
                   }
                   <th className={getDayClassName(w[6])}>{isStartOfMonth && (w[6].getMonth() + 1)}</th>
                 </tr>
@@ -131,7 +147,7 @@ function App() {
 
 export default App;
 
-function DayView ({ date, julianAtNoon = false }) {
+function DayView ({ date, preferences: { julian: julianPreference, yearDay: yearDayPreference } }) {
   const isToday = +date === +startOfDay();
 
   /** @type {import('react').CSSProperties} */
@@ -168,7 +184,8 @@ function DayView ({ date, julianAtNoon = false }) {
           <MoonIndicator date={date} />
         }
       </div>
-      <span style={julianStyle}>{julian(date) + (julianAtNoon ? 1 : 0)}</span>
+      { yearDayPreference !== 0 && <span style={julianStyle}>{yearDay(date)}</span> }
+      { julianPreference !== JULIAN_PREF.NONE && <span style={julianStyle}>{julian(date) + (julianPreference === JULIAN_PREF.FROM_NOON ? 1 : 0)}</span> }
     </div>
   );
 }
@@ -419,4 +436,10 @@ function isSameDay (date1, date2) {
 
 function formatTime (date = new Date()) {
   return `${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}`;
+}
+
+function yearDay (date = new Date()) {
+  const first_jan = new Date(date.getFullYear(), 0, 1);
+
+  return julian(date) - julian(first_jan) + 1;
 }

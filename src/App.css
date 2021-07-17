@@ -24,6 +24,10 @@
   margin: 0.125em;
 }
 
+.App-Options select {
+  font-size: 1em;
+}
+
 table {
   margin: 0 auto;
   border-collapse: collapse;
@@ -44,10 +48,6 @@ thead {
 
 .MonthBands .Day-MonthOdd {
   background-color: #F5F5F5;
-}
-
-.MonthBands .Day-MonthEven {
-  background-color: #E9E9E9;
 }
 
 .MonthBands .Day-CurrentMonth {
