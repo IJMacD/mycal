@@ -1,5 +1,6 @@
 import './App.css';
 import { phase, phase_string } from './moon';
+import { calcEquiSol, calcMoonPhase } from './stellafane';
 import { useSavedState } from './useSavedState';
 
 const DAY_NAMES = {
@@ -166,6 +167,14 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
   };
 
   /** @type {import('react').CSSProperties} */
+  const sunStyle = {
+    position: "absolute",
+    top: 0,
+    left: "0.25em",
+    lineHeight: "0.5em",
+  };
+
+  /** @type {import('react').CSSProperties} */
   const moonStyle = {
     position: "absolute",
     top: 0,
@@ -178,6 +187,9 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
   return (
     <div style={style}>
       {date.getDate()}
+      <div style={sunStyle}>
+        <SunIndicator date={date} />
+      </div>
       <div style={moonStyle}>
         { allMoon ?
           <MoonIndicatorAll date={date} /> :
@@ -188,6 +200,31 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
       { julianPreference !== JULIAN_PREF.NONE && <span style={julianStyle}>{julian(date) + (julianPreference === JULIAN_PREF.FROM_NOON ? 1 : 0)}</span> }
     </div>
   );
+}
+
+function SunIndicator ({ date }) {
+  const phases = sunPhases(date);
+  let out = "\xA0"; // &nbsp;
+  let title = "";
+
+  if (isSameDay(date, phases[0])) {
+    out = "☀️";
+    title = `Vernal Equinox ${formatTime(phases[0])}`;
+  }
+  else if (isSameDay(date, phases[1])) {
+    out = "☀️";
+    title = `Summer Solstice ${formatTime(phases[1])}`;
+  }
+  else if (isSameDay(date, phases[2])) {
+    out = "☀️";
+    title = `Autumnal Equinox ${formatTime(phases[2])}`;
+  }
+  else if (isSameDay(date, phases[3])) {
+    out = "☀️";
+    title = `Winter Solstice ${formatTime(phases[3])}`;
+  }
+
+  return <span style={{fontSize:"0.5em"}} title={title}>{out}</span>;
 }
 
 function MoonIndicator ({ date }) {
@@ -201,7 +238,8 @@ function MoonIndicator ({ date }) {
     return <span style={{fontSize:"0.5em"}} title={phase.toString()}>{out}</span>;
   }
 
-  const phases = moonPhases(date);
+  if (false) moonPhases(date);
+  const phases = moonPhases2(date);
   let out = "\xA0"; // &nbsp;
   let title = "";
 
@@ -322,7 +360,7 @@ function moonPhase (date = new Date()) {
   if (false) return moonPhase1(date);
   if (false) return moonPhase2(date);
   if (false) return moonPhase3(date);
-  if (true) return moonPhase4(date);
+  return moonPhase4(date);
 }
 
 /**
@@ -423,6 +461,33 @@ function moonPhase4 (date = new Date()) {
   return -1;
 }
 
+// https://stellafane.org/observing/moon_phase.html
+function moonPhases2 (date = new Date()) {
+  const { new: newMoons, full: fullMoons } = calcMoonPhase(date.getFullYear());
+
+  const nextNewMoonIndex = newMoons.findIndex(n => +n > +date);
+  const prevNewMoonIndex = nextNewMoonIndex - 1;
+
+  if (prevNewMoonIndex < 0) {
+    throw Error("Can't find the moon");
+  }
+
+  const prevNewMoon = newMoons[prevNewMoonIndex];
+  const fullMoon = fullMoons[prevNewMoonIndex];
+  const nextNewMoon = newMoons[nextNewMoonIndex];
+
+  const firstQuarter = new Date((+prevNewMoon + +fullMoon) / 2);
+  const lastQuarter = new Date((+fullMoon + +nextNewMoon) / 2);
+
+  return [
+    prevNewMoon,
+    firstQuarter,
+    fullMoon,
+    lastQuarter,
+    nextNewMoon,
+  ];
+}
+
 /**
  *
  * @param {Date} date1
@@ -442,4 +507,9 @@ function yearDay (date = new Date()) {
   const first_jan = new Date(date.getFullYear(), 0, 1);
 
   return julian(date) - julian(first_jan) + 1;
+}
+
+// https://stellafane.org/misc/equinox.html
+function sunPhases (date = new Date()) {
+  return [...Array(4)].map((_,i) => calcEquiSol(i, date.getFullYear()));
 }
