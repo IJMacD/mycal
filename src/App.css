@@ -4,6 +4,12 @@
   }
 }
 
+@media (min-width: 2048px) {
+    html {
+        font-size: 56pt;
+    }
+}
+
 .App {
   text-align: center;
   padding-top: 1.5rem;
@@ -55,7 +61,16 @@ thead {
 }
 
 @media print {
+  .Day-Date {
+    font-size: 1.5em;
+  }
   .App-Options {
     display: none;
+  }
+  table {
+    width: 100%;
+  }
+  thead {
+    position: static;
   }
 }

@@ -20,6 +20,9 @@ const JULIAN_PREF = {
   NONE: 0,
   AT_MIDNIGHT: 1,
   FROM_NOON: 2,
+  MODIFIED: 3,
+  NASA: 4,
+  J2000: 5,
 };
 
 function App() {
@@ -97,6 +100,9 @@ function App() {
             <option value={JULIAN_PREF.NONE}>None</option>
             <option value={JULIAN_PREF.AT_MIDNIGHT}>At Midnight</option>
             <option value={JULIAN_PREF.FROM_NOON}>From Noon</option>
+            <option value={JULIAN_PREF.MODIFIED}>Modified</option>
+            <option value={JULIAN_PREF.NASA}>NASA</option>
+            <option value={JULIAN_PREF.J2000}>J2000</option>
           </select>
         </label>
         <label>
@@ -126,7 +132,7 @@ function App() {
                 <tr key={+w[0]} className={currentWeek?"Week Week-Current":"Week"}>
                   <th style={{textAlign:"right"}}>
                     {(n === 1 || i === 0) && (yearAdjust + w[6].getFullYear() + "-")}
-                    W{n}
+                    W{n.toString().padStart(2,"0")}
                   </th>
                   {
                     w.map(d => (
@@ -184,9 +190,36 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
 
   const allMoon = false;
 
+  let j = 0;
+
+  if (julianPreference !== JULIAN_PREF.NONE) {
+    j = julian(date);
+  }
+
+  switch (julianPreference) {
+    case JULIAN_PREF.FROM_NOON:
+      j += 0.5;
+      break;
+    case JULIAN_PREF.MODIFIED:
+      j -= 2400000.5;
+      break;
+    case JULIAN_PREF.NASA:
+      j -= 2400000.5;
+      j -= 40000;
+      break;
+    case JULIAN_PREF.J2000:
+      j -= 2451545.0;
+      // To match https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/xTime/xTime.pl
+      j += 0.5;
+      break;
+    default:
+  }
+
+  j = j|0;
+
   return (
     <div style={style}>
-      {date.getDate()}
+      <div className="Day-Date">{date.getDate()}</div>
       <div style={sunStyle}>
         <SunIndicator date={date} />
       </div>
@@ -197,7 +230,7 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
         }
       </div>
       { yearDayPreference !== 0 && <span style={julianStyle}>{yearDay(date)}</span> }
-      { julianPreference !== JULIAN_PREF.NONE && <span style={julianStyle}>{julian(date) + (julianPreference === JULIAN_PREF.FROM_NOON ? 1 : 0)}</span> }
+      { julianPreference !== JULIAN_PREF.NONE && <span style={julianStyle}>{j}</span> }
     </div>
   );
 }
@@ -299,15 +332,18 @@ function makeWeeks(d, count) {
 }
 
 function startOfMonth (date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth());
+  const d = new Date(date.getFullYear(), date.getMonth());
+  return d;
 }
 
 function startOfWeek (date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 1);
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 1);
+  return d;
 }
 
 function startOfDay (date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return d;
 }
 
 
@@ -335,9 +371,9 @@ function weekNumber (date = new Date()) {
  * Algorithm from https://quasar.as.utexas.edu/BillInfo/JulianDatesG.html
  */
 function julian (date = new Date()) {
-  let y = date.getUTCFullYear();
-  let m = date.getUTCMonth() + 1;
-  const d = date.getUTCDate();
+  let y = date.getFullYear();
+  let m = date.getMonth() + 1;
+  const d = date.getDate();
 
   if (m < 3) {
       y--;
@@ -350,10 +386,14 @@ function julian (date = new Date()) {
   const e = (365.25 * (y + 4716))|0;
   const f = (30.6001 * (m + 1))|0;
 
-  const h = date.getUTCHours();
-  const g = h < 12 ? 1 : 0;
+  const h = date.getHours();
+  const i = date.getMinutes();
+  const s = date.getSeconds();
+  const ms = date.getMilliseconds();
 
-  return c + d + e + f - 1524 - g;
+  const g = (h + (i + (s + (ms / 1000)) / 60 / 60)) / 24;
+
+  return c + d + e + f - 1524 - 0.5 + g;
 }
 
 function moonPhase (date = new Date()) {
