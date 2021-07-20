@@ -47,8 +47,8 @@ function App() {
    */
   function getDayClassName (date) {
     const d = new Date();
-    const currentMonth = d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth();
-    const monthEven = date.getMonth() % 2;
+    const currentMonth = d.getFullYear() === date.getUTCFullYear() && d.getMonth() === date.getUTCMonth();
+    const monthEven = date.getUTCMonth() % 2;
 
     return `Day ${currentMonth ? "Day-CurrentMonth" : ""} ${monthEven ? "Day-MonthEven" : "Day-MonthOdd"}`;
   }
@@ -219,7 +219,7 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
 
   return (
     <div style={style}>
-      <div className="Day-Date">{date.getDate()}</div>
+      <div className="Day-Date">{date.getUTCDate()}</div>
       <div style={sunStyle}>
         <SunIndicator date={date} />
       </div>
@@ -332,17 +332,20 @@ function makeWeeks(d, count) {
 }
 
 function startOfMonth (date = new Date()) {
-  const d = new Date(date.getFullYear(), date.getMonth());
+  const d = new Date(date.getUTCFullYear(), date.getUTCMonth());
+  modifyToUTC(d);
   return d;
 }
 
 function startOfWeek (date = new Date()) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 1);
+  const d = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - date.getUTCDay() + 1);
+  modifyToUTC(d);
   return d;
 }
 
 function startOfDay (date = new Date()) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const d = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  modifyToUTC(d);
   return d;
 }
 
@@ -353,7 +356,7 @@ function startOfDay (date = new Date()) {
  */
 function weekNumber (date = new Date()) {
   const target  = new Date(date);
-  const dayNr   = (date.getDay() + 6) % 7;
+  const dayNr   = (date.getUTCDay() + 6) % 7;
 
   target.setDate(target.getDate() - dayNr + 3);
   const firstThursday = +target;
@@ -371,9 +374,9 @@ function weekNumber (date = new Date()) {
  * Algorithm from https://quasar.as.utexas.edu/BillInfo/JulianDatesG.html
  */
 function julian (date = new Date()) {
-  let y = date.getFullYear();
-  let m = date.getMonth() + 1;
-  const d = date.getDate();
+  let y = date.getUTCFullYear();
+  let m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
 
   if (m < 3) {
       y--;
@@ -386,10 +389,10 @@ function julian (date = new Date()) {
   const e = (365.25 * (y + 4716))|0;
   const f = (30.6001 * (m + 1))|0;
 
-  const h = date.getHours();
-  const i = date.getMinutes();
-  const s = date.getSeconds();
-  const ms = date.getMilliseconds();
+  const h = date.getUTCHours();
+  const i = date.getUTCMinutes();
+  const s = date.getUTCSeconds();
+  const ms = date.getUTCMilliseconds();
 
   const g = (h + (i + (s + (ms / 1000)) / 60 / 60)) / 24;
 
@@ -409,9 +412,9 @@ function moonPhase (date = new Date()) {
  * @returns
  */
 function moonPhase1 (date = new Date()) {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDay();
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDay();
 	let r = year % 100;
 	r %= 19;
 	if (r>9){ r -= 19;}
@@ -428,8 +431,8 @@ function moonPhase1 (date = new Date()) {
  * @returns
  */
 function moonPhase2 (date = new Date()) {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1;
 	const n = Math.floor(12.37 * (year - 1900 + ((1 * month - 0.5)/12.0)));
 	const RAD = 3.14159265/180.0;
 	const t = n / 1236.85;
@@ -503,7 +506,7 @@ function moonPhase4 (date = new Date()) {
 
 // https://stellafane.org/observing/moon_phase.html
 function moonPhases2 (date = new Date()) {
-  const { new: newMoons, full: fullMoons } = calcMoonPhase(date.getFullYear());
+  const { new: newMoons, full: fullMoons } = calcMoonPhase(date.getUTCFullYear());
 
   const nextNewMoonIndex = newMoons.findIndex(n => +n > +date);
   const prevNewMoonIndex = nextNewMoonIndex - 1;
@@ -540,16 +543,25 @@ function isSameDay (date1, date2) {
 }
 
 function formatTime (date = new Date()) {
-  return `${date.getHours().toString().padStart(2,"0")}:${date.getMinutes().toString().padStart(2,"0")}`;
+  return `${date.getUTCHours().toString().padStart(2,"0")}:${date.getUTCMinutes().toString().padStart(2,"0")}`;
 }
 
 function yearDay (date = new Date()) {
-  const first_jan = new Date(date.getFullYear(), 0, 1);
+  const first_jan = new Date(date.getUTCFullYear(), 0, 1);
+  modifyToUTC(first_jan);
 
   return julian(date) - julian(first_jan) + 1;
 }
 
 // https://stellafane.org/misc/equinox.html
 function sunPhases (date = new Date()) {
-  return [...Array(4)].map((_,i) => calcEquiSol(i, date.getFullYear()));
+  return [...Array(4)].map((_,i) => calcEquiSol(i, date.getUTCFullYear()));
+}
+
+/**
+ * Assume that times have been set in local time but they were intended to be UTC
+ * @param {Date} date
+ */
+function modifyToUTC (date) {
+  date.setTime(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
 }
