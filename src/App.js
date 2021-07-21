@@ -1,6 +1,7 @@
 import './App.css';
 import { startOfWeek, startOfMonth, makeWeeks, weekNumber, startOfDay, julian, yearDay } from './dates';
 import { MoonIndicatorAll, MoonIndicator } from './MoonIndicator';
+import { altitude } from './sun';
 import { SunIndicator } from './SunIndicator';
 import { useSavedState } from './useSavedState';
 import { useVisibilityChange } from './useVisibilityChange';
@@ -237,6 +238,7 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
       </div>
       { yearDayPreference !== 0 && <span style={julianStyle}>{yearDay(date)}</span> }
       { julianPreference !== JULIAN_PREF.NONE && <span style={julianStyle}>{j}</span> }
+      <span style={julianStyle}>{(altitude(22.3193 / 180 * Math.PI, date)/Math.PI*180).toFixed(2)}°</span>
     </div>
   );
 }

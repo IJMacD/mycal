@@ -73,6 +73,8 @@ export function yearDay (date = new Date()) {
   return julian(date) - julian(first_jan) + 1;
 }
 
+export const ordinalDate = yearDay;
+
 /**
  * Algorithm from https://quasar.as.utexas.edu/BillInfo/JulianDatesG.html
  */
