@@ -33,6 +33,7 @@ function App() {
   const [ julianPreference, setJulianPreference ] = useSavedState("mycal.julianPreference", JULIAN_PREF.AT_MIDNIGHT);
   const [ yearDayPreference, setYearDayPreference ] = useSavedState("mycal.yearDayPreference", 0);
   const [ monthBands, setMonthBands ] = useSavedState("mycal.monthBands", false);
+  const [ allMoons, setAllMoons ] = useSavedState("mycal.allMoons", false);
   useVisibilityChange();
 
   const d = startOfWeek(startOfMonth());
@@ -57,7 +58,7 @@ function App() {
   }
 
   const yearAdjust = yearPreference === "holocene" ? 1e4 : 0;
-  const dayPreferences = { yearDay: yearDayPreference, julian: julianPreference };
+  const dayPreferences = { yearDay: yearDayPreference, julian: julianPreference, allMoons };
 
   return (
     <div className="App">
@@ -112,6 +113,10 @@ function App() {
           <span>Month Bands</span>{' '}
           <input type="checkbox" checked={monthBands} onChange={e => setMonthBands(e.target.checked)} />
         </label>
+        <label>
+          <span>All Moons</span>{' '}
+          <input type="checkbox" checked={allMoons} onChange={e => setAllMoons(e.target.checked)} />
+        </label>
       </div>
       <table className={monthBands?"MonthBands":""}>
         <thead>
@@ -157,7 +162,7 @@ function App() {
 
 export default App;
 
-function DayView ({ date, preferences: { julian: julianPreference, yearDay: yearDayPreference } }) {
+function DayView ({ date, preferences: { julian: julianPreference, yearDay: yearDayPreference, allMoons } }) {
   const isToday = +date === +startOfDay();
 
   /** @type {import('react').CSSProperties} */
@@ -190,8 +195,6 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
     right: "0.25em",
     lineHeight: "0.5em",
   };
-
-  const allMoon = false;
 
   let j = 0;
 
@@ -227,7 +230,7 @@ function DayView ({ date, preferences: { julian: julianPreference, yearDay: year
         <SunIndicator date={date} />
       </div>
       <div style={moonStyle}>
-        { allMoon ?
+        { allMoons ?
           <MoonIndicatorAll date={date} /> :
           <MoonIndicator date={date} />
         }
