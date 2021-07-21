@@ -3,6 +3,7 @@ import { startOfWeek, startOfMonth, makeWeeks, weekNumber, startOfDay, julian, y
 import { MoonIndicatorAll, MoonIndicator } from './MoonIndicator';
 import { SunIndicator } from './SunIndicator';
 import { useSavedState } from './useSavedState';
+import { useVisibilityChange } from './useVisibilityChange';
 
 const DAY_NAMES = {
   english: ["Monday","Tuesday","Wedensday","Thursday","Friday","Sauturday","Sunday"],
@@ -32,6 +33,7 @@ function App() {
   const [ julianPreference, setJulianPreference ] = useSavedState("mycal.julianPreference", JULIAN_PREF.AT_MIDNIGHT);
   const [ yearDayPreference, setYearDayPreference ] = useSavedState("mycal.yearDayPreference", 0);
   const [ monthBands, setMonthBands ] = useSavedState("mycal.monthBands", false);
+  useVisibilityChange();
 
   const d = startOfWeek(startOfMonth());
   const weeks = makeWeeks(d, 100);
